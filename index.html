@@ -334,13 +334,15 @@ footer{
     <label>Firma / müşteri</label>
     <input id="aiCompany" placeholder="Örn: ABC Food">
 
-    <label>Ürün</label>
-    <select id="aiProduct">
-      <option>Plastik Palet</option>
-      <option>Alaturka WC</option>
-      <option>Plastik Pisuvar</option>
-      <option>Organizer</option>
-    </select>
+    <label>Ürünler</label>
+
+<div id="aiProducts">
+  <label><input type="checkbox" name="aiProduct" value="Plastik Palet"> Plastik Palet</label>
+  <label><input type="checkbox" name="aiProduct" value="Plastik Kasa"> Plastik Kasa</label>
+  <label><input type="checkbox" name="aiProduct" value="Alaturka WC"> Alaturka WC</label>
+  <label><input type="checkbox" name="aiProduct" value="Pisuvar"> Plastik Pisuvar</label>
+  <label><input type="checkbox" name="aiProduct" value="Mutfak Ürünleri"> Mutfak & Organizer Ürünleri</label>
+</div>
 
     <label>Mesaj türü</label>
     <select id="messageType">
@@ -469,57 +471,70 @@ function createOffer(){
   `;
 }
 
-function generateMessage(){
-  const company=document.getElementById('aiCompany').value || 'Yetkili';
-  const product=document.getElementById('aiProduct').value;
-  const type=document.getElementById('messageType').value;
+async function generateMessage() {
 
-  let text='';
+  const company =
+    document.getElementById('aiCompany').value.trim();
 
-  if(type==='İlk satış e-postası'){
-    text=`Merhaba ${company},
+  const products = Array.from(
+    document.querySelectorAll('input[name="aiProduct"]:checked')
+  ).map(item => item.value);
 
-YZC Plastik olarak ${product} ürün grubunda üretim ve tedarik çözümleri sunuyoruz.
+  const messageType =
+    document.getElementById('messageType').value;
 
-Firmanızın ihtiyaçlarına uygun fiyat ve ürün seçeneklerimizi paylaşmak isteriz.
+  const output =
+    document.getElementById('generatedMessage');
 
-Talep miktarınızı ve kullanım alanınızı iletmeniz halinde size özel teklif hazırlayabiliriz.
-
-Saygılarımızla,
-YZC Plastik`;
+  if (products.length === 0) {
+    alert('Lütfen en az bir ürün seçin.');
+    return;
   }
 
-  if(type==='Teklif sonrası takip'){
-    text=`Merhaba ${company},
+  output.value = 'YZC AI mesajınızı hazırlıyor...';
 
-${product} için ilettiğimiz teklifimizi değerlendirme fırsatınız oldu mu?
+  try {
 
-Fiyat, miktar veya teslimat konusunda revize etmemizi istediğiniz bir konu varsa memnuniyetle yardımcı olabiliriz.
+    const response = await fetch(
+      'https://yzc-ai-assistant.firatyazici.workers.dev/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firma: company,
+          urunler: products,
+          mesajTuru: messageType
+        })
+      }
+    );
 
-İyi çalışmalar,
-YZC Plastik`;
+    if (!response.ok) {
+      throw new Error('Sunucu hatası: ' + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data.message) {
+      output.value = data.message;
+    } else if (data.error) {
+      output.value =
+        'AI hatası: ' +
+        data.error +
+        (data.details ? '\n' + data.details : '');
+    } else {
+      output.value = 'Mesaj oluşturulamadı.';
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    output.value =
+      'AI bağlantı hatası: ' + error.message;
   }
-
-  if(type==='WhatsApp satış mesajı'){
-    text=`Merhaba ${company}, YZC Plastik'ten iletişime geçiyorum. ${product} ürünlerimizle ilgili firmanıza fiyat ve ürün bilgisi paylaşmak isteriz. Uygun olduğunuzda talep miktarınızı iletebilirsiniz.`;
-  }
-
-  if(type==='İhracat tanıtım mesajı'){
-    text=`Dear ${company},
-
-We are YZC Plastik, a Turkish manufacturer supplying plastic products for industrial and commercial applications.
-
-We would like to introduce our ${product} range and discuss potential cooperation with your company.
-
-We can provide product specifications, pricing and export terms according to your requirements.
-
-Best regards,
-YZC Plastik`;
-  }
-
-  document.getElementById('generatedMessage').value=text;
 }
-
 function copyMessage(){
   const box=document.getElementById('generatedMessage');
   box.select();
