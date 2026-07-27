@@ -470,7 +470,39 @@ function createOffer(){
     <strong>Toplam: ${total.toLocaleString('tr-TR')} ${currency}</strong>
   `;
 }
+const YZC_SIGNATURE_TR = `
 
+Fırat YAZICI
+YZC Plastic
+
+📍 Adres: Fatih Mah. Halide Edip Adıvar Sk. No:11 D:5, Büyükçekmece/İSTANBUL/Türkiye
+📞 +90 532 381 85 18
+📞 +90 533 322 0 992
+📞 +30 698 219 69 35
+✉️ firat@yzcplastik.com
+🌐 www.yzcplastik.com
+
+YZC Plastic – Kalitenin ve Güvenin Adresi
+🔹 Plastik ürünleriniz için yenilikçi çözümler
+🔹 Dayanıklı ve çevre dostu üretim
+`;
+
+const YZC_SIGNATURE_EN = `
+
+Fırat YAZICI
+YZC Plastic
+
+📍 Address: Fatih Mah. Halide Edip Adıvar Sk. No:11 D:5, Büyükçekmece/ISTANBUL/Türkiye
+📞 +90 532 381 85 18
+📞 +90 533 322 0 992
+📞 +30 698 219 69 35
+✉️ firat@yzcplastik.com
+🌐 www.yzcplastik.com
+
+YZC Plastic – Address of Quality and Trust
+🔹 Innovative solutions for your plastic products
+🔹 Durable and environmentally friendly production
+`;
 async function generateMessage() {
 
   const company =
@@ -517,8 +549,11 @@ async function generateMessage() {
     const data = await response.json();
 
     if (data.message) {
-      output.value = data.message;
-    } else if (data.error) {
+  const isExport = messageType === 'İhracat tanıtım mesajı';
+  const signature = isExport ? YZC_SIGNATURE_EN : YZC_SIGNATURE_TR;
+
+  output.value = data.message.trim() + "\n" + signature;
+} else if (data.error) {
       output.value =
         'AI hatası: ' +
         data.error +
