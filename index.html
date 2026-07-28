@@ -551,7 +551,7 @@ async function generateMessage() {
     if (data.message) {
   const isExport = messageType === 'İhracat tanıtım mesajı';
   const signature = isExport ? YZC_SIGNATURE_EN : YZC_SIGNATURE_TR;
-
+console.log(data.message);
   output.value = data.message.trim() + "\n" + signature;
 } else if (data.error) {
       output.value =
