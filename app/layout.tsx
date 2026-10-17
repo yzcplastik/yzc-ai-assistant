@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Manrope } from 'next/font/google'
 import { StoreProvider } from '@/lib/store'
 import { AppShell } from '@/components/app-shell'
+import { AuthGuard } from "@/components/auth-guard"
 import './globals.css'
 
 const manrope = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-manrope' })
@@ -48,7 +49,9 @@ export default function RootLayout({
     <html lang="tr" className={`light bg-background ${manrope.variable}`}>
       <body className="font-sans antialiased">
         <StoreProvider>
-          <AppShell>{children}</AppShell>
+          <AuthGuard>
+            <AppShell>{children}</AppShell>
+          </AuthGuard>
         </StoreProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
