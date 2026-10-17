@@ -118,11 +118,14 @@ function AddWarehouseDialog() {
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    addWarehouse({ name: name.trim(), location: location.trim(), description: description.trim() || undefined })
+    setError(null)
+    const result = await addWarehouse({ name: name.trim(), location: location.trim(), description: description.trim() || undefined })
+    if (!result) return setError("Depo kaydedilemedi. Lütfen tekrar deneyin.")
     setName(""); setLocation(""); setDescription("")
     setOpen(false)
   }
@@ -150,6 +153,7 @@ function AddWarehouseDialog() {
             <Label htmlFor="wdesc">Açıklama</Label>
             <Input id="wdesc" className="h-11 text-base" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
+          {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
           <Button type="submit" className="h-12 text-base font-bold">Kaydet</Button>
         </form>
       </DialogContent>
@@ -167,11 +171,13 @@ function AddProductDialog({ defaultWarehouseId }: { defaultWarehouseId?: string 
   const [stock, setStock] = useState("0")
   const [critical, setCritical] = useState("100")
   const [warehouseId, setWarehouseId] = useState(defaultWarehouseId ?? warehouses[0]?.id ?? "")
+  const [error, setError] = useState<string | null>(null)
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !warehouseId) return
-    addProduct({
+    setError(null)
+    const result = await addProduct({
       name: name.trim(),
       code: code.trim() || `${category === "hammadde" ? "HM" : "UR"}-${Date.now().toString().slice(-4)}`,
       category,
@@ -180,6 +186,7 @@ function AddProductDialog({ defaultWarehouseId }: { defaultWarehouseId?: string 
       criticalLevel: Math.max(0, Number(critical) || 0),
       warehouseId,
     })
+    if (!result) return setError("Ürün kaydedilemedi. Lütfen tekrar deneyin.")
     setName(""); setCode(""); setStock("0"); setCritical("100")
     setOpen(false)
   }
@@ -244,6 +251,7 @@ function AddProductDialog({ defaultWarehouseId }: { defaultWarehouseId?: string 
               {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </NativeSelect>
           </div>
+          {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
           <Button type="submit" className="h-12 text-base font-bold">Kaydet</Button>
         </form>
       </DialogContent>

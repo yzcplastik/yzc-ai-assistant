@@ -57,7 +57,7 @@ export function MovementForm({ types, categoryFor, photoHints }: MovementFormPro
     setQuantity(String(Math.max(0, current + delta)))
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
@@ -66,7 +66,7 @@ export function MovementForm({ types, categoryFor, photoHints }: MovementFormPro
     const qty = Number(quantity)
     if (!qty || qty <= 0) return setError("Miktar sıfırdan büyük olmalıdır.")
 
-    const result = addMovement({ productId, warehouseId, type, quantity: qty, note, photo })
+    const result = await addMovement({ productId, warehouseId, type, quantity: qty, note, photo })
     if (!result.ok) return setError(result.error)
 
     const p = products.find((x) => x.id === productId)
