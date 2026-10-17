@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="mt-auto rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-4 text-xs leading-relaxed text-sidebar-foreground/70">
-          Veriler şu an örnek modda tutuluyor. Kalıcı kayıt için Supabase bağlantısı eklenebilir.
+          Ürün, depo ve hareket kayıtları Supabase üzerinde kalıcı olarak saklanır.
         </div>
       </aside>
 

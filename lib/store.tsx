@@ -10,7 +10,9 @@ interface NewProductInput { name: string; code: string; category: Product["categ
 interface StoreValue {
   warehouses: Warehouse[]; products: Product[]; movements: Movement[]; loading: boolean; error: string | null
   addMovement: (input: NewMovementInput) => Promise<{ ok: true } | { ok: false; error: string }>
-  addProduct: (input: NewProductInput) => Promise<Product | null>; addWarehouse: (input: Omit<Warehouse, "id">) => Promise<Warehouse | null>
+  addProduct: (input: NewProductInput) => Promise<Product | null>
+  updateProduct: (id: string, input: Omit<NewProductInput, "stock">) => Promise<Product | null>
+  addWarehouse: (input: Omit<Warehouse, "id">) => Promise<Warehouse | null>
   getProduct: (id: string) => Product | undefined; getWarehouse: (id: string) => Warehouse | undefined
 }
 const StoreContext = createContext<StoreValue | null>(null)
@@ -58,9 +60,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [products, mutate])
   const addProduct = useCallback(async (input: NewProductInput) => {
     const table = input.category === "hammadde" ? "hammaddeler" : "urunler"
-    const { data: row, error: insertError } = await supabase.from(table).insert({ ad: input.name, kod: input.code, birim: input.unit, mevcut_stok: input.stock, minimum_stok: input.criticalLevel, depo_id: input.warehouseId, ...(input.category === "urun" ? { kategori: "urun" } : {}) }).select("id, ad, kod, birim, mevcut_stok, minimum_stok, depo_id, created_at").single()
+    const { data: row, error: insertError } = await supabase.from(table).insert({ ad: input.name, kod: input.code, birim: input.unit, mevcut_stok: 0, minimum_stok: input.criticalLevel, depo_id: input.warehouseId, ...(input.category === "urun" ? { kategori: "urun" } : {}) }).select("id, ad, kod, birim, mevcut_stok, minimum_stok, depo_id, created_at").single()
     if (insertError || !row) return null
-    await mutate(); return { id: String(row.id), name: String(row.ad), code: String(row.kod ?? ""), category: input.category, unit: String(row.birim), stock: Number(row.mevcut_stok), criticalLevel: Number(row.minimum_stok), warehouseId: String(row.depo_id), updatedAt: String(row.created_at) }
+    if (input.stock > 0) {
+      const { error: movementError } = await supabase.rpc("kaydet_stok_hareketi", { p_islem_turu: input.category === "hammadde" ? "hammadde_giris" : "giris", p_urun_id: input.category === "urun" ? row.id : null, p_hammadde_id: input.category === "hammadde" ? row.id : null, p_depo_id: input.warehouseId, p_miktar: input.stock, p_fotograf_url: null, p_notlar: "Başlangıç stoku", p_olusturan: "Depo Sorumlusu" })
+      if (movementError) { await supabase.from(table).delete().eq("id", row.id); return null }
+    }
+    await mutate();
+    return { id: String(row.id), name: String(row.ad), code: String(row.kod ?? ""), category: input.category, unit: String(row.birim), stock: input.stock, criticalLevel: Number(row.minimum_stok), warehouseId: String(row.depo_id), updatedAt: String(row.created_at) }
+  }, [mutate])
+  const updateProduct = useCallback(async (id: string, input: Omit<NewProductInput, "stock">) => {
+    const table = input.category === "hammadde" ? "hammaddeler" : "urunler"
+    const { data: row, error: updateError } = await supabase.from(table).update({ ad: input.name, kod: input.code, birim: input.unit, minimum_stok: input.criticalLevel, depo_id: input.warehouseId, ...(input.category === "urun" ? { kategori: "urun" } : {}) }).eq("id", id).select("id, ad, kod, birim, mevcut_stok, minimum_stok, depo_id, created_at").single()
+    if (updateError || !row) return null
+    await mutate()
+    return { id: String(row.id), name: String(row.ad), code: String(row.kod ?? ""), category: input.category, unit: String(row.birim), stock: Number(row.mevcut_stok ?? 0), criticalLevel: Number(row.minimum_stok ?? 0), warehouseId: String(row.depo_id ?? ""), updatedAt: String(row.created_at ?? new Date().toISOString()) }
   }, [mutate])
   const addWarehouse = useCallback(async (input: Omit<Warehouse, "id">) => { const { data: row, error: insertError } = await supabase.from("depolar").insert({ ad: input.name, konum: input.location }).select("id, ad, konum").single(); if (insertError || !row) return null; await mutate(); return { id: String(row.id), name: String(row.ad), location: String(row.konum ?? ""), description: input.description } }, [mutate])
   const value = useMemo<StoreValue>(() => ({ warehouses, products, movements, loading: isLoading, error: error?.message ?? null, addMovement, addProduct, addWarehouse, getProduct: (id) => products.find((p) => p.id === id), getWarehouse: (id) => warehouses.find((w) => w.id === id) }), [warehouses, products, movements, isLoading, error, addMovement, addProduct, addWarehouse])
