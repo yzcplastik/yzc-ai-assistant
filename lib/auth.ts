@@ -21,3 +21,19 @@ export async function getCurrentUser() {
 
   return data.user
 }
+export async function isManager(): Promise<boolean> {
+  const { data: userData, error: userError } =
+    await supabase.auth.getUser()
+
+  if (userError || !userData.user) return false
+
+  const { data, error } = await supabase
+    .from("kullanici_rolleri")
+    .select("rol")
+    .eq("user_id", userData.user.id)
+    .single()
+
+  if (error) return false
+
+  return data?.rol === "yonetici"
+}
