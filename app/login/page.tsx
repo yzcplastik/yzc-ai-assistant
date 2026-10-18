@@ -7,7 +7,7 @@ import { signIn } from "@/lib/auth"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -15,16 +15,27 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError("")
+
+    const normalizedPhone = phone.replace(/\D/g, "")
+    const localPhone = normalizedPhone.startsWith("90") && normalizedPhone.length === 12
+      ? normalizedPhone.slice(2)
+      : normalizedPhone.startsWith("0") && normalizedPhone.length === 11
+        ? normalizedPhone.slice(1)
+        : normalizedPhone
+
+    if (!/^5\d{9}$/.test(localPhone)) {
+      setError("Geçerli bir cep telefonu numarası girin.")
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { error: loginError } = await signIn(
-        email.trim(),
-        password
-      )
+      const email = `${localPhone}@personel.plastvit.invalid`
+      const { error: loginError } = await signIn(email, password)
 
       if (loginError) {
-        setError("E-posta veya şifre hatalı.")
+        setError("Telefon numarası veya şifre hatalı.")
         return
       }
 
@@ -50,18 +61,19 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
-              E-posta
+            <label htmlFor="phone" className="block text-sm font-medium mb-2">
+              Telefon Numarası
             </label>
             <input
-              id="email"
-              type="email"
+              id="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               required
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full rounded-lg border p-3"
-              placeholder="E-posta adresiniz"
+              placeholder="05XX XXX XX XX"
             />
           </div>
 
@@ -97,7 +109,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-slate-400">
-          YZC Plastik - Yetkili Personel Girişi
+          YZC Plastik – Yetkili Personel Girişi
         </p>
       </div>
     </main>
