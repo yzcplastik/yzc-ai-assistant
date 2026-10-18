@@ -1,5 +1,6 @@
 "use client"
-
+import { useEffect } from "react"
+import { isManager } from "@/lib/auth"
 import { Pencil, Plus, Search } from "lucide-react"
 import { useMemo, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,19 @@ import { useStore } from "@/lib/store"
 import type { Product, ProductCategory } from "@/lib/types"
 
 export function ProductsView() {
+  const [canManage, setCanManage] = useState(false)
+
+useEffect(() => {
+  let active = true
+
+  isManager().then((allowed) => {
+    if (active) setCanManage(allowed)
+  })
+
+  return () => {
+    active = false
+  }
+}, [])
   const { products, warehouses, loading } = useStore()
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("all")
@@ -24,7 +38,7 @@ export function ProductsView() {
   }).sort((a, b) => a.name.localeCompare(b.name, "tr")), [products, query, category])
 
   return <>
-    <PageHeader title="Ürünler" description="Ürün ve hammaddeleri tek ekrandan yönetin." actions={<ProductDialog />} />
+    <PageHeader title="Ürünler" description="Ürün ve hammaddeleri tek ekrandan yönetin." actions={canManage ? <ProductDialog /> : undefined} />
     <div className="mb-5 flex flex-col gap-3 sm:flex-row">
       <div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-3 size-5 text-muted-foreground" aria-hidden /><Input aria-label="Ürün ara" className="h-11 pl-10 text-base" placeholder="Ürün adı veya kodu ara..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
       <NativeSelect aria-label="Kategori filtresi" className="h-11 sm:w-44" value={category} onChange={(e) => setCategory(e.target.value)}><option value="all">Tüm kategoriler</option><option value="urun">Ürünler</option><option value="hammadde">Hammaddeler</option></NativeSelect>
