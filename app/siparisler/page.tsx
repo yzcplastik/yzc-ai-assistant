@@ -590,7 +590,11 @@ if (kalemSonuc.error) {
           Henüz kayıtlı sipariş bulunmuyor.
         </p>
       )}
-
+{!loading && aktifSiparisler.length === 0 && (
+  <p className="rounded-lg border bg-slate-50 p-4 text-slate-600">
+    Şu anda aktif sipariş bulunmuyor.
+  </p>
+)}
       {aktifSiparisler.map((siparis) => (
         <div
           key={siparis.id}
