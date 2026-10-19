@@ -288,7 +288,41 @@ if (kalemSonuc.error) {
 
     await yukle()
   }
+async function siparisIptalEt(siparis: Siparis) {
+  if (
+    !window.confirm(
+      `${siparis.siparis_no} numaralı sipariş iptal edilsin mi?`
+    )
+  ) {
+    return
+  }
 
+  setIslemId(siparis.id)
+  setError("")
+  setMessage("")
+
+  try {
+    const { error: iptalHatasi } = await supabase.rpc(
+      "siparis_iptal_et",
+      { p_siparis_id: siparis.id }
+    )
+
+    if (iptalHatasi) throw iptalHatasi
+
+    await yukle()
+    setMessage(
+      `${siparis.siparis_no} numaralı sipariş iptal edildi.`
+    )
+  } catch (hata) {
+    setError(
+      hata instanceof Error
+        ? "Sipariş iptal edilemedi: " + hata.message
+        : "Sipariş iptal edilemedi."
+    )
+  } finally {
+    setIslemId(null)
+  }
+}
   async function sevkeHazirYap(siparis: Siparis) {
     if (
       !window.confirm(
