@@ -570,7 +570,20 @@ export default function SiparislerPage() {
               Sipariş #{siparis.siparis_no}
             </p>
             <p>Müşteri: {siparis.musteri_adi}</p>
-            <p>
+
+{siparis.musteri_telefon && (
+  <p>Telefon: {siparis.musteri_telefon}</p>
+)}
+
+{siparis.teslimat_adresi && (
+  <p>Teslimat Adresi: {siparis.teslimat_adresi}</p>
+)}
+
+{siparis.aciklama && (
+  <p>Açıklama: {siparis.aciklama}</p>
+)}
+
+<p>
   Durum: {DURUM_ADLARI[siparis.durum] ?? siparis.durum}
 </p>
             <p className="text-sm text-slate-500">
