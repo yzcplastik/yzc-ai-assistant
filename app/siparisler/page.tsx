@@ -76,7 +76,7 @@ export default function SiparislerPage() {
     setLoading(true)
     setError("")
 
-    const [siparisSonuc, urunSonuc, depoSonuc, kullaniciSonuc] =
+    const [siparisSonuc, urunSonuc, depoSonuc, kullaniciSonuc, kalemSonuc] =
       await Promise.all([
         supabase
           .from("siparisler")
@@ -93,8 +93,15 @@ export default function SiparislerPage() {
           .select("id, ad")
           .order("ad"),
         supabase.auth.getUser(),
+        supabase
+  .from("siparis_kalemleri")
+  .select("id, siparis_id, urun_id, miktar"),
       ])
-
+if (kalemSonuc.error) {
+  setError("Sipariş kalemleri alınamadı: " + kalemSonuc.error.message)
+} else {
+  setSiparisKalemleri(kalemSonuc.data ?? [])
+}
     if (siparisSonuc.error) {
       setError(siparisSonuc.error.message)
     } else {
