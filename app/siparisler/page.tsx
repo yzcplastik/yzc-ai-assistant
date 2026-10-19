@@ -82,6 +82,7 @@ const gecmisSiparisler = siparisler.filter((siparis) =>
   SiparisKalemi[]
 >([])
   const [urunler, setUrunler] = useState<Urun[]>([])
+  const [musteriler, setMusteriler] = useState<Musteri[]>([])
   const [depolar, setDepolar] = useState<Depo[]>([])
   const [rol, setRol] = useState("")
   const [loading, setLoading] = useState(true)
