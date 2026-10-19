@@ -25,9 +25,11 @@ type Urun = {
   depo_id: string | null
 }
 
-type Depo = {
+type SiparisKalemi = {
   id: string
-  ad: string
+  siparis_id: string
+  urun_id: string
+  miktar: number
 }
 
 const BUCKET = "siparis-yukleme"
