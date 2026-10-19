@@ -46,7 +46,9 @@ export default function SiparislerPage() {
   const [adres, setAdres] = useState("")
   const [aciklama, setAciklama] = useState("")
   const [urunId, setUrunId] = useState("")
-  const [depoId, setDepoId] = useState("")
+  const depoId = urunler.find(
+  (urun) => urun.id === urunId
+)?.depo_id ?? ""
   const [miktar, setMiktar] = useState("")
 
   const [fotograflar, setFotograflar] = useState<
@@ -214,7 +216,6 @@ export default function SiparislerPage() {
     setAdres("")
     setAciklama("")
     setUrunId("")
-    setDepoId("")
     setMiktar("")
     setFormAcik(false)
 
@@ -480,28 +481,6 @@ export default function SiparislerPage() {
               className="w-full rounded-lg border p-3"
               rows={2}
             />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Depo *
-            </label>
-            <select
-              required
-              value={depoId}
-              onChange={(e) => {
-                setDepoId(e.target.value)
-                setUrunId("")
-              }}
-              className="w-full rounded-lg border p-3"
-            >
-              <option value="">Depo seçiniz</option>
-              {depolar.map((depo) => (
-                <option key={depo.id} value={depo.id}>
-                  {depo.ad}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div>
