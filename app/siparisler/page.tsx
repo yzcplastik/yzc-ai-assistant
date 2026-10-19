@@ -165,9 +165,10 @@ export default function SiparislerPage() {
   )
 
   const uygunUrunler = urunler.filter(
-    (urun) => !depoId || urun.depo_id === depoId
-  )
-
+  (urun) =>
+    urun.depo_id !== null &&
+    urun.ad.toLocaleLowerCase("tr-TR").includes("palet")
+)
   async function siparisKaydet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
