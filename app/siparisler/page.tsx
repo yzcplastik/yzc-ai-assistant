@@ -33,6 +33,16 @@ type SiparisKalemi = {
 }
 
 const BUCKET = "siparis-yukleme"
+const AKTIF_DURUMLAR = [
+  "yeni",
+  "hazirlaniyor",
+  "sevke_hazir",
+]
+
+const GECMIS_DURUMLAR = [
+  "teslim_edildi",
+  "iptal",
+]
 const DURUM_ADLARI: Record<string, string> = {
   yeni: "Yeni Sipariş",
   hazirlaniyor: "Hazırlanıyor",
