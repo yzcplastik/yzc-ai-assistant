@@ -52,6 +52,13 @@ const DURUM_ADLARI: Record<string, string> = {
 }
 export default function SiparislerPage() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
+  const aktifSiparisler = siparisler.filter((siparis) =>
+  AKTIF_DURUMLAR.includes(siparis.durum)
+)
+
+const gecmisSiparisler = siparisler.filter((siparis) =>
+  GECMIS_DURUMLAR.includes(siparis.durum)
+)
   const [siparisKalemleri, setSiparisKalemleri] = useState<
   SiparisKalemi[]
 >([])
