@@ -579,7 +579,9 @@ if (kalemSonuc.error) {
         </form>
       )}
 
-      <h2 className="text-lg font-semibold">Sipariş Listesi</h2>
+      <h2 className="text-lg font-semibold">
+  Aktif Siparişler ({aktifSiparisler.length})
+</h2>
 
       {loading && <p>Siparişler yükleniyor...</p>}
 
@@ -589,7 +591,7 @@ if (kalemSonuc.error) {
         </p>
       )}
 
-      {siparisler.map((siparis) => (
+      {aktifSiparisler.map((siparis) => (
         <div
           key={siparis.id}
           className="space-y-3 rounded-xl border bg-white p-4"
