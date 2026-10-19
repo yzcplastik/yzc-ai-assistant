@@ -726,6 +726,57 @@ if (kalemSonuc.error) {
           )}
         </div>
       ))}
+            <details className="rounded-xl border bg-white p-4">
+        <summary className="cursor-pointer text-lg font-semibold">
+          Geçmiş Siparişler ({gecmisSiparisler.length})
+        </summary>
+
+        <div className="mt-4 space-y-3">
+          {gecmisSiparisler.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              Henüz geçmiş sipariş bulunmuyor.
+            </p>
+          ) : (
+            gecmisSiparisler.map((siparis) => (
+              <div
+                key={siparis.id}
+                className="rounded-lg border bg-slate-50 p-4"
+              >
+                <p className="font-semibold">
+                  Sipariş #{siparis.siparis_no}
+                </p>
+
+                <p>Müşteri: {siparis.musteri_adi}</p>
+
+                {siparisKalemleri
+                  .filter((kalem) => kalem.siparis_id === siparis.id)
+                  .map((kalem) => {
+                    const urun = urunler.find(
+                      (u) => u.id === kalem.urun_id
+                    )
+
+                    return (
+                      <div key={kalem.id} className="my-2">
+                        <p>Ürün: {urun?.ad ?? "Ürün bulunamadı"}</p>
+                        <p>
+                          Miktar: {kalem.miktar} {urun?.birim ?? "Adet"}
+                        </p>
+                      </div>
+                    )
+                  })}
+
+                <p>
+                  Durum: {DURUM_ADLARI[siparis.durum] ?? siparis.durum}
+                </p>
+
+                <p className="text-sm text-slate-500">
+                  {new Date(siparis.created_at).toLocaleString("tr-TR")}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </details>
     </div>
   )
 }
