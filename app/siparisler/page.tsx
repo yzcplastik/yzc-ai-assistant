@@ -76,7 +76,7 @@ export default function SiparislerPage() {
         supabase
           .from("siparisler")
           .select(
-            "id, siparis_no, musteri_adi, durum, created_at, yukleme_fotografi_url"
+            "id, siparis_no, musteri_adi, musteri_telefon, teslimat_adresi, aciklama, durum, created_at, yukleme_fotografi_url"
           )
           .order("created_at", { ascending: false }),
         supabase
