@@ -31,7 +31,15 @@ type SiparisKalemi = {
   urun_id: string
   miktar: number
 }
-
+function musteriAdiDuzenle(ad: string): string {
+  return ad
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/(^|[\s-])(\p{L})/gu, (_, ayirici, harf) =>
+      ayirici + harf.toLocaleUpperCase("tr-TR")
+    )
+}
 const BUCKET = "siparis-yukleme"
 const AKTIF_DURUMLAR = [
   "yeni",
