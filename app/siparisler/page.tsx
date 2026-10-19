@@ -239,7 +239,7 @@ if (kalemSonuc.error) {
     const { error: kayitHatasi } = await supabase.rpc(
       "yeni_siparis_olustur",
       {
-        p_musteri_adi: musteriAdi.trim(),
+        p_musteri_adi: musteriAdiDuzenle(musteriAdi),
         p_musteri_telefon: telefon.trim(),
         p_teslimat_adresi: adres.trim(),
         p_aciklama: aciklama.trim(),
