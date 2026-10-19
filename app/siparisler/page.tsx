@@ -31,6 +31,17 @@ type SiparisKalemi = {
   urun_id: string
   miktar: number
 }
+type Depo = {
+  id: string
+  ad: string
+}
+
+type Musteri = {
+  id: string
+  musteri_adi: string
+  telefon: string | null
+  adres: string | null
+}
 function musteriAdiDuzenle(ad: string): string {
   return ad
     .trim()
