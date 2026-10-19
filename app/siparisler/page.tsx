@@ -130,14 +130,14 @@ const gecmisSiparisler = siparisler.filter((siparis) =>
           .select("id, ad")
           .order("ad"),
         supabase.auth.getUser(),
+                supabase
+          .from("siparis_kalemleri")
+          .select("id, siparis_id, urun_id, miktar"),
         supabase
-  .from("siparis_kalemleri")
-  .select("id, siparis_id, urun_id, miktar"),
+          .from("musteriler")
+          .select("id, musteri_adi, telefon, adres")
+          .order("musteri_adi"),
       ])
-    supabase
-  .from("musteriler")
-  .select("id, musteri_adi, telefon, adres")
-  .order("musteri_adi"),
       if (musteriSonuc.error) {
   setError("Müşteriler alınamadı: " + musteriSonuc.error.message)
 } else {
