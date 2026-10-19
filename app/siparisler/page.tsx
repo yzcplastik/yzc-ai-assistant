@@ -113,7 +113,7 @@ const gecmisSiparisler = siparisler.filter((siparis) =>
     setLoading(true)
     setError("")
 
-    const [siparisSonuc, urunSonuc, depoSonuc, kullaniciSonuc, kalemSonuc] =
+    const [siparisSonuc, urunSonuc, depoSonuc, kullaniciSonuc, kalemSonuc, musteriSonuc] =
       await Promise.all([
         supabase
           .from("siparisler")
@@ -134,6 +134,15 @@ const gecmisSiparisler = siparisler.filter((siparis) =>
   .from("siparis_kalemleri")
   .select("id, siparis_id, urun_id, miktar"),
       ])
+    supabase
+  .from("musteriler")
+  .select("id, musteri_adi, telefon, adres")
+  .order("musteri_adi"),
+      if (musteriSonuc.error) {
+  setError("Müşteriler alınamadı: " + musteriSonuc.error.message)
+} else {
+  setMusteriler(musteriSonuc.data ?? [])
+}
 if (kalemSonuc.error) {
   setError("Sipariş kalemleri alınamadı: " + kalemSonuc.error.message)
 } else {
