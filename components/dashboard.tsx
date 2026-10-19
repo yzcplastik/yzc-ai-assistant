@@ -2,6 +2,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
   ArrowDownToLine,
@@ -36,6 +37,19 @@ const DURUMLAR = [
 ]
 
 export function Dashboard() {
+  const router = useRouter()
+
+async function cikisYap() {
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    alert("Çıkış yapılamadı: " + error.message)
+    return
+  }
+
+  router.replace("/login")
+  router.refresh()
+}
   const { products, warehouses, movements } = useStore()
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
   const [aktifEmail, setAktifEmail] = useState("")
@@ -148,6 +162,13 @@ useEffect(() => {
             ? "Satış Temsilcisi"
             : aktifRol || "Rol yükleniyor..."}
     </p>
+<button
+  type="button"
+  onClick={cikisYap}
+  className="mt-3 w-full rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+>
+  Çıkış Yap
+</button>
   </div>
 </div>
       {/* Hızlı işlemler */}
