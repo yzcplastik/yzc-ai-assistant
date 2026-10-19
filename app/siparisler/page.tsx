@@ -747,7 +747,17 @@ name="firma-arama"
               {new Date(siparis.created_at).toLocaleString("tr-TR")}
             </p>
           </div>
-
+{(rol === "yonetici" || rol === "satis_temsilcisi") &&
+  ["yeni", "hazirlaniyor"].includes(siparis.durum) && (
+    <button
+      type="button"
+      disabled={islemId !== null}
+      onClick={() => void siparisIptalEt(siparis)}
+      className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+    >
+      {islemId === siparis.id ? "İptal Ediliyor..." : "İptal Et"}
+    </button>
+  )}
           {depoYetkisi &&
             ["yeni", "hazirlaniyor"].includes(siparis.durum) && (
               <button
