@@ -523,6 +523,8 @@ if (kalemSonuc.error) {
               onChange={(e) => setMusteriAdi(e.target.value)}
               className="w-full rounded-lg border p-3"
               placeholder="Müşteri veya firma adı"
+              autoComplete="off"
+name="firma-arama"
             />
             {musteriAdi.trim() && musteriler
   .filter((musteri) =>
