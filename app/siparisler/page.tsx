@@ -605,6 +605,17 @@ if (kalemSonuc.error) {
               Sipariş #{siparis.siparis_no}
             </p>
             <p>Müşteri: {siparis.musteri_adi}</p>
+            {siparis.musteri_telefon && (
+  <p>Telefon: {siparis.musteri_telefon}</p>
+)}
+
+{siparis.teslimat_adresi && (
+  <p>Teslimat Adresi: {siparis.teslimat_adresi}</p>
+)}
+
+{siparis.aciklama && (
+  <p>Açıklama: {siparis.aciklama}</p>
+)}
             {siparisKalemleri
   .filter((kalem) => kalem.siparis_id === siparis.id)
   .map((kalem) => {
