@@ -9,6 +9,9 @@ type Siparis = {
   id: string
   siparis_no: string
   musteri_adi: string
+  musteri_telefon: string | null
+  teslimat_adresi: string | null
+  aciklama: string | null
   durum: string
   created_at: string
   yukleme_fotografi_url: string | null
