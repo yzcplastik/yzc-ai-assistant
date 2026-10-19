@@ -172,6 +172,7 @@ useEffect(() => {
   </div>
 </div>
       {/* Hızlı işlemler */}
+      {(aktifRol === "yonetici" || aktifRol === "calisan") && (
       <div className="mb-6 grid grid-cols-2 gap-3">
         <Link
           href="/stok-giris"
@@ -202,7 +203,8 @@ useEffect(() => {
             </span>
           </span>
         </Link>
-      </div>
+            </div>
+      )}
 
       {/* Stok özet kartları */}
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
