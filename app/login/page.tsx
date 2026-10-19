@@ -23,7 +23,7 @@ export default function LoginPage() {
         ? normalizedPhone.slice(1)
         : normalizedPhone
 
-    if (!/^5\d{9}$/.test(localPhone)) {
+    if (!phone.includes("@") && !/^5\d{9}$/.test(localPhone)) {
       setError("Geçerli bir cep telefonu numarası girin.")
       return
     }
@@ -31,7 +31,9 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const email = `${localPhone}@personel.plastvit.invalid`
+      const email = phone.includes("@")
+  ? phone.trim().toLowerCase()
+  : `${localPhone}@personel.plastvit.invalid`
       const { error: loginError } = await signIn(email, password)
 
       if (loginError) {
