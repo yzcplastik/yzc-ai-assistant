@@ -29,8 +29,10 @@ export default function SiparislerPage() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
   const [urunler, setUrunler] = useState<Urun[]>([])
   const [depolar, setDepolar] = useState<Depo[]>([])
+  const [rol, setRol] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [islemId, setIslemId] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [formAcik, setFormAcik] = useState(false)
@@ -47,7 +49,7 @@ export default function SiparislerPage() {
     setLoading(true)
     setError("")
 
-    const [siparisSonuc, urunSonuc, depoSonuc] =
+    const [siparisSonuc, urunSonuc, depoSonuc, kullaniciSonuc] =
       await Promise.all([
         supabase
           .from("siparisler")
@@ -61,6 +63,7 @@ export default function SiparislerPage() {
           .from("depolar")
           .select("id, ad")
           .order("ad"),
+        supabase.auth.getUser(),
       ])
 
     if (siparisSonuc.error) {
@@ -71,9 +74,7 @@ export default function SiparislerPage() {
 
     if (urunSonuc.error) {
       setError((onceki) =>
-        [onceki, urunSonuc.error!.message]
-          .filter(Boolean)
-          .join(" | ")
+        [onceki, urunSonuc.error!.message].filter(Boolean).join(" | ")
       )
     } else {
       setUrunler(urunSonuc.data ?? [])
@@ -81,12 +82,40 @@ export default function SiparislerPage() {
 
     if (depoSonuc.error) {
       setError((onceki) =>
-        [onceki, depoSonuc.error!.message]
-          .filter(Boolean)
-          .join(" | ")
+        [onceki, depoSonuc.error!.message].filter(Boolean).join(" | ")
       )
     } else {
       setDepolar(depoSonuc.data ?? [])
+    }
+
+    if (kullaniciSonuc.data.user) {
+      const { data: rolVerisi, error: rolHatasi } = await supabase
+        .from("kullanici_rolleri")
+        .select("rol")
+        .eq("user_id", kullaniciSonuc.data.user.id)
+        .in("rol", ["yonetici", "calisan", "satis_temsilcisi"])
+
+      if (rolHatasi) {
+        setError((onceki) =>
+          [onceki, "Rol bilgisi alınamadı: " + rolHatasi.message]
+            .filter(Boolean)
+            .join(" | ")
+        )
+        setRol("")
+      } else {
+        const roller = (rolVerisi ?? []).map((kayit) => kayit.rol)
+        setRol(
+          roller.includes("yonetici")
+            ? "yonetici"
+            : roller.includes("calisan")
+              ? "calisan"
+              : roller.includes("satis_temsilcisi")
+                ? "satis_temsilcisi"
+                : ""
+        )
+      }
+    } else {
+      setRol("")
     }
 
     setLoading(false)
@@ -96,9 +125,13 @@ export default function SiparislerPage() {
     void yukle()
   }, [yukle])
 
-  const seciliUrun = urunler.find(
-    (urun) => urun.id === urunId
-  )
+  const sevkeHazirYetkisi =
+    rol === "yonetici" || rol === "calisan"
+
+  const siparisOlusturmaYetkisi =
+    rol === "yonetici" || rol === "satis_temsilcisi"
+
+  const seciliUrun = urunler.find((urun) => urun.id === urunId)
 
   const uygunUrunler = urunler.filter(
     (urun) => !depoId || urun.depo_id === depoId
@@ -125,7 +158,7 @@ export default function SiparislerPage() {
 
     setSaving(true)
 
-    const { data, error: kayitHatasi } = await supabase.rpc(
+    const { error: kayitHatasi } = await supabase.rpc(
       "yeni_siparis_olustur",
       {
         p_musteri_adi: musteriAdi.trim(),
@@ -154,10 +187,38 @@ export default function SiparislerPage() {
     setDepoId("")
     setMiktar("")
     setFormAcik(false)
+    await yukle()
+  }
 
-    if (data) {
-      await yukle()
+  async function sevkeHazirYap(siparis: Siparis) {
+    if (
+      !window.confirm(
+        `${siparis.siparis_no} numaralı sipariş sevke hazır yapılsın mı?`
+      )
+    ) {
+      return
     }
+
+    setIslemId(siparis.id)
+    setError("")
+    setMessage("")
+
+    const { error: islemHatasi } = await supabase.rpc(
+      "siparis_sevke_hazir",
+      { p_siparis_id: siparis.id }
+    )
+
+    setIslemId(null)
+
+    if (islemHatasi) {
+      setError("İşlem başarısız: " + islemHatasi.message)
+      return
+    }
+
+    await yukle()
+    setMessage(
+      `${siparis.siparis_no} numaralı sipariş sevke hazır yapıldı.`
+    )
   }
 
   return (
@@ -170,13 +231,15 @@ export default function SiparislerPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setFormAcik(!formAcik)}
-          className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white"
-        >
-          {formAcik ? "Vazgeç" : "+ Yeni Sipariş"}
-        </button>
+        {siparisOlusturmaYetkisi && (
+          <button
+            type="button"
+            onClick={() => setFormAcik(!formAcik)}
+            className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white"
+          >
+            {formAcik ? "Vazgeç" : "+ Yeni Sipariş"}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -191,7 +254,7 @@ export default function SiparislerPage() {
         </p>
       )}
 
-      {formAcik && (
+      {formAcik && siparisOlusturmaYetkisi && (
         <form
           onSubmit={siparisKaydet}
           className="space-y-4 rounded-xl border bg-white p-5"
@@ -235,7 +298,6 @@ export default function SiparislerPage() {
               onChange={(e) => setAdres(e.target.value)}
               className="w-full rounded-lg border p-3"
               rows={2}
-              placeholder="Teslimat adresi"
             />
           </div>
 
@@ -294,7 +356,6 @@ export default function SiparislerPage() {
               value={miktar}
               onChange={(e) => setMiktar(e.target.value)}
               className="w-full rounded-lg border p-3"
-              placeholder="Miktar giriniz"
             />
           </div>
 
@@ -307,7 +368,6 @@ export default function SiparislerPage() {
               onChange={(e) => setAciklama(e.target.value)}
               className="w-full rounded-lg border p-3"
               rows={2}
-              placeholder="Sipariş notu"
             />
           </div>
 
@@ -325,7 +385,7 @@ export default function SiparislerPage() {
 
       {loading && <p>Siparişler yükleniyor...</p>}
 
-      {!loading && !error && siparisler.length === 0 && (
+      {!loading && siparisler.length === 0 && (
         <p className="rounded-lg border p-4">
           Henüz kayıtlı sipariş bulunmuyor.
         </p>
@@ -334,16 +394,32 @@ export default function SiparislerPage() {
       {siparisler.map((siparis) => (
         <div
           key={siparis.id}
-          className="rounded-xl border bg-white p-4"
+          className="space-y-3 rounded-xl border bg-white p-4"
         >
-          <p className="font-semibold">
-            Sipariş #{siparis.siparis_no}
-          </p>
-          <p>Müşteri: {siparis.musteri_adi}</p>
-          <p>Durum: {siparis.durum}</p>
-          <p className="text-sm text-slate-500">
-            {new Date(siparis.created_at).toLocaleString("tr-TR")}
-          </p>
+          <div>
+            <p className="font-semibold">
+              Sipariş #{siparis.siparis_no}
+            </p>
+            <p>Müşteri: {siparis.musteri_adi}</p>
+            <p>Durum: {siparis.durum}</p>
+            <p className="text-sm text-slate-500">
+              {new Date(siparis.created_at).toLocaleString("tr-TR")}
+            </p>
+          </div>
+
+          {sevkeHazirYetkisi &&
+            ["yeni", "hazirlaniyor"].includes(siparis.durum) && (
+              <button
+                type="button"
+                disabled={islemId !== null}
+                onClick={() => void sevkeHazirYap(siparis)}
+                className="rounded-lg bg-emerald-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+              >
+                {islemId === siparis.id
+                  ? "İşleniyor..."
+                  : "Sevke Hazır"}
+              </button>
+            )}
         </div>
       ))}
     </div>
