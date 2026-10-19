@@ -2,6 +2,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import type { ChangeEvent, FormEvent } from "react"
 import { supabase } from "@/lib/supabase"
 
 type Siparis = {
@@ -10,6 +11,7 @@ type Siparis = {
   musteri_adi: string
   durum: string
   created_at: string
+  yukleme_fotografi_url: string | null
 }
 
 type Urun = {
@@ -24,6 +26,8 @@ type Depo = {
   id: string
   ad: string
 }
+
+const BUCKET = "siparis-yukleme"
 
 export default function SiparislerPage() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
@@ -45,6 +49,13 @@ export default function SiparislerPage() {
   const [depoId, setDepoId] = useState("")
   const [miktar, setMiktar] = useState("")
 
+  const [fotograflar, setFotograflar] = useState<
+    Record<string, File>
+  >({})
+  const [yuklenenYollar, setYuklenenYollar] = useState<
+    Record<string, string>
+  >({})
+
   const yukle = useCallback(async () => {
     setLoading(true)
     setError("")
@@ -53,7 +64,9 @@ export default function SiparislerPage() {
       await Promise.all([
         supabase
           .from("siparisler")
-          .select("id, siparis_no, musteri_adi, durum, created_at")
+          .select(
+            "id, siparis_no, musteri_adi, durum, created_at, yukleme_fotografi_url"
+          )
           .order("created_at", { ascending: false }),
         supabase
           .from("urunler")
@@ -74,7 +87,9 @@ export default function SiparislerPage() {
 
     if (urunSonuc.error) {
       setError((onceki) =>
-        [onceki, urunSonuc.error!.message].filter(Boolean).join(" | ")
+        [onceki, urunSonuc.error!.message]
+          .filter(Boolean)
+          .join(" | ")
       )
     } else {
       setUrunler(urunSonuc.data ?? [])
@@ -82,28 +97,42 @@ export default function SiparislerPage() {
 
     if (depoSonuc.error) {
       setError((onceki) =>
-        [onceki, depoSonuc.error!.message].filter(Boolean).join(" | ")
+        [onceki, depoSonuc.error!.message]
+          .filter(Boolean)
+          .join(" | ")
       )
     } else {
       setDepolar(depoSonuc.data ?? [])
     }
 
-    if (kullaniciSonuc.data.user) {
-      const { data: rolVerisi, error: rolHatasi } = await supabase
+    if (kullaniciSonuc.error) {
+      setError((onceki) =>
+        [onceki, kullaniciSonuc.error!.message]
+          .filter(Boolean)
+          .join(" | ")
+      )
+      setRol("")
+    } else if (kullaniciSonuc.data.user) {
+      const { data, error: rolHatasi } = await supabase
         .from("kullanici_rolleri")
         .select("rol")
         .eq("user_id", kullaniciSonuc.data.user.id)
-        .in("rol", ["yonetici", "calisan", "satis_temsilcisi"])
+        .in("rol", [
+          "yonetici",
+          "calisan",
+          "satis_temsilcisi",
+        ])
 
       if (rolHatasi) {
         setError((onceki) =>
-          [onceki, "Rol bilgisi alınamadı: " + rolHatasi.message]
+          [onceki, rolHatasi.message]
             .filter(Boolean)
             .join(" | ")
         )
         setRol("")
       } else {
-        const roller = (rolVerisi ?? []).map((kayit) => kayit.rol)
+        const roller = (data ?? []).map((kayit) => kayit.rol)
+
         setRol(
           roller.includes("yonetici")
             ? "yonetici"
@@ -125,21 +154,21 @@ export default function SiparislerPage() {
     void yukle()
   }, [yukle])
 
-  const sevkeHazirYetkisi =
+  const depoYetkisi =
     rol === "yonetici" || rol === "calisan"
 
   const siparisOlusturmaYetkisi =
     rol === "yonetici" || rol === "satis_temsilcisi"
 
-  const seciliUrun = urunler.find((urun) => urun.id === urunId)
+  const seciliUrun = urunler.find(
+    (urun) => urun.id === urunId
+  )
 
   const uygunUrunler = urunler.filter(
     (urun) => !depoId || urun.depo_id === depoId
   )
 
-  async function siparisKaydet(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  async function siparisKaydet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
     setMessage("")
@@ -187,6 +216,7 @@ export default function SiparislerPage() {
     setDepoId("")
     setMiktar("")
     setFormAcik(false)
+
     await yukle()
   }
 
@@ -203,22 +233,173 @@ export default function SiparislerPage() {
     setError("")
     setMessage("")
 
-    const { error: islemHatasi } = await supabase.rpc(
-      "siparis_sevke_hazir",
-      { p_siparis_id: siparis.id }
-    )
+    try {
+      const { error: islemHatasi } = await supabase.rpc(
+        "siparis_sevke_hazir",
+        { p_siparis_id: siparis.id }
+      )
 
-    setIslemId(null)
+      if (islemHatasi) throw islemHatasi
 
-    if (islemHatasi) {
-      setError("İşlem başarısız: " + islemHatasi.message)
+      await yukle()
+      setMessage(
+        `${siparis.siparis_no} numaralı sipariş sevke hazır yapıldı.`
+      )
+    } catch (hata) {
+      setError(
+        hata instanceof Error
+          ? hata.message
+          : "Sevke hazırlama başarısız."
+      )
+    } finally {
+      setIslemId(null)
+    }
+  }
+
+  function fotografSec(
+    siparisId: string,
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const dosya = event.target.files?.[0]
+    if (!dosya) return
+
+    const izinliTurler = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ]
+
+    if (!izinliTurler.includes(dosya.type)) {
+      setError("Yalnızca JPG, PNG veya WebP yükleyebilirsiniz.")
       return
     }
 
-    await yukle()
-    setMessage(
-      `${siparis.siparis_no} numaralı sipariş sevke hazır yapıldı.`
-    )
+    if (dosya.size > 10 * 1024 * 1024) {
+      setError("Fotoğraf en fazla 10 MB olabilir.")
+      return
+    }
+
+    setError("")
+    setFotograflar((onceki) => ({
+      ...onceki,
+      [siparisId]: dosya,
+    }))
+    setYuklenenYollar((onceki) => {
+      const yeni = { ...onceki }
+      delete yeni[siparisId]
+      return yeni
+    })
+  }
+
+  async function fotografYukle(siparis: Siparis) {
+    const dosya = fotograflar[siparis.id]
+
+    if (!dosya) {
+      setError("Önce bir yükleme fotoğrafı seçin.")
+      return
+    }
+
+    setIslemId(siparis.id)
+    setError("")
+    setMessage("")
+
+    try {
+      const uzanti =
+        dosya.type === "image/png"
+          ? "png"
+          : dosya.type === "image/webp"
+            ? "webp"
+            : "jpg"
+
+      const dosyaYolu =
+        `${siparis.id}/${crypto.randomUUID()}.${uzanti}`
+
+      const { error: yuklemeHatasi } = await supabase.storage
+        .from(BUCKET)
+        .upload(dosyaYolu, dosya, {
+          contentType: dosya.type,
+          upsert: false,
+        })
+
+      if (yuklemeHatasi) throw yuklemeHatasi
+
+      setYuklenenYollar((onceki) => ({
+        ...onceki,
+        [siparis.id]: dosyaYolu,
+      }))
+
+      setMessage(
+        "Fotoğraf yüklendi. Teslimatı onaylayabilirsiniz."
+      )
+    } catch (hata) {
+      setError(
+        hata instanceof Error
+          ? "Fotoğraf yüklenemedi: " + hata.message
+          : "Fotoğraf yüklenemedi."
+      )
+    } finally {
+      setIslemId(null)
+    }
+  }
+
+  async function teslimEt(siparis: Siparis) {
+    const dosyaYolu = yuklenenYollar[siparis.id]
+
+    if (!dosyaYolu) {
+      setError("Önce yükleme fotoğrafını yükleyin.")
+      return
+    }
+
+    if (
+      !window.confirm(
+        `${siparis.siparis_no} numaralı sipariş teslim edilsin mi?\n\n` +
+        "Bu işlem stoktan sipariş miktarını düşecektir."
+      )
+    ) {
+      return
+    }
+
+    setIslemId(siparis.id)
+    setError("")
+    setMessage("")
+
+    try {
+      const { error: teslimHatasi } = await supabase.rpc(
+        "siparis_teslim_et",
+        {
+          p_siparis_id: siparis.id,
+          p_fotograf_url: dosyaYolu,
+        }
+      )
+
+      if (teslimHatasi) throw teslimHatasi
+
+      setYuklenenYollar((onceki) => {
+        const yeni = { ...onceki }
+        delete yeni[siparis.id]
+        return yeni
+      })
+
+      setFotograflar((onceki) => {
+        const yeni = { ...onceki }
+        delete yeni[siparis.id]
+        return yeni
+      })
+
+      await yukle()
+      setMessage(
+        `${siparis.siparis_no} numaralı sipariş teslim edildi. ` +
+        "Stok hareketi kaydedildi."
+      )
+    } catch (hata) {
+      setError(
+        hata instanceof Error
+          ? "Teslimat başarısız: " + hata.message
+          : "Teslimat başarısız."
+      )
+    } finally {
+      setIslemId(null)
+    }
   }
 
   return (
@@ -285,7 +466,6 @@ export default function SiparislerPage() {
               value={telefon}
               onChange={(e) => setTelefon(e.target.value)}
               className="w-full rounded-lg border p-3"
-              placeholder="Telefon numarası"
             />
           </div>
 
@@ -407,7 +587,7 @@ export default function SiparislerPage() {
             </p>
           </div>
 
-          {sevkeHazirYetkisi &&
+          {depoYetkisi &&
             ["yeni", "hazirlaniyor"].includes(siparis.durum) && (
               <button
                 type="button"
@@ -420,6 +600,69 @@ export default function SiparislerPage() {
                   : "Sevke Hazır"}
               </button>
             )}
+
+          {depoYetkisi && siparis.durum === "sevke_hazir" && (
+            <div className="space-y-3 rounded-lg bg-slate-50 p-4">
+              <p className="font-medium">
+                Yükleme Fotoğrafı
+              </p>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) =>
+                  fotografSec(siparis.id, event)
+                }
+                disabled={islemId !== null}
+                className="block w-full text-sm"
+              />
+
+              {fotograflar[siparis.id] && (
+                <p className="text-sm text-slate-600">
+                  Seçilen: {fotograflar[siparis.id].name}
+                </p>
+              )}
+
+              {!yuklenenYollar[siparis.id] ? (
+                <button
+                  type="button"
+                  disabled={
+                    islemId !== null ||
+                    !fotograflar[siparis.id]
+                  }
+                  onClick={() => void fotografYukle(siparis)}
+                  className="rounded-lg bg-blue-700 px-4 py-2 font-medium text-white disabled:opacity-50"
+                >
+                  {islemId === siparis.id
+                    ? "Yükleniyor..."
+                    : "Fotoğrafı Yükle"}
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-green-700">
+                    Fotoğraf başarıyla yüklendi.
+                  </p>
+
+                  <button
+                    type="button"
+                    disabled={islemId !== null}
+                    onClick={() => void teslimEt(siparis)}
+                    className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+                  >
+                    {islemId === siparis.id
+                      ? "İşleniyor..."
+                      : "Teslim Edildi"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {siparis.durum === "teslim_edildi" && (
+            <p className="text-sm font-medium text-green-700">
+              Teslimat tamamlandı.
+            </p>
+          )}
         </div>
       ))}
     </div>
