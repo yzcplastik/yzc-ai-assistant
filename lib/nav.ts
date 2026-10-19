@@ -1,8 +1,10 @@
+
 import {
   AlertTriangle,
   ArrowDownToLine,
   ArrowUpFromLine,
   BarChart3,
+  ClipboardList,
   History,
   PackageSearch,
   LayoutDashboard,
@@ -19,6 +21,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", shortLabel: "Panel", icon: LayoutDashboard },
+  { href: "/siparisler", label: "Siparişler", shortLabel: "Sipariş", icon: ClipboardList },
   { href: "/stok-giris", label: "Stok Girişi", shortLabel: "Giriş", icon: ArrowDownToLine },
   { href: "/stok-cikis", label: "Stok Çıkışı", shortLabel: "Çıkış", icon: ArrowUpFromLine },
   { href: "/depolar", label: "Depolar", shortLabel: "Depolar", icon: Warehouse },
@@ -29,5 +32,5 @@ export const NAV_ITEMS: NavItem[] = [
 ]
 
 export const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((i) =>
-  ["/", "/stok-giris", "/stok-cikis", "/urunler", "/kritik-stoklar"].includes(i.href),
+  ["/", "/siparisler", "/stok-giris", "/stok-cikis", "/urunler"].includes(i.href),
 )
