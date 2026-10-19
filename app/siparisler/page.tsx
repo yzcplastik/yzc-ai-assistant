@@ -524,6 +524,30 @@ if (kalemSonuc.error) {
               className="w-full rounded-lg border p-3"
               placeholder="Müşteri veya firma adı"
             />
+            {musteriAdi.trim() && musteriler
+  .filter((musteri) =>
+    musteri.musteri_adi
+      .toLocaleLowerCase("tr-TR")
+      .includes(musteriAdi.trim().toLocaleLowerCase("tr-TR"))
+  )
+  .filter((musteri) =>
+    musteri.musteri_adi.toLocaleLowerCase("tr-TR") !==
+    musteriAdi.trim().toLocaleLowerCase("tr-TR")
+  )
+  .map((musteri) => (
+    <button
+      key={musteri.id}
+      type="button"
+      onClick={() => {
+        setMusteriAdi(musteri.musteri_adi)
+        setTelefon(musteri.telefon ?? "")
+        setAdres(musteri.adres ?? "")
+      }}
+      className="mt-1 block w-full rounded-lg border bg-slate-50 p-3 text-left hover:bg-blue-50"
+    >
+      {musteri.musteri_adi}
+    </button>
+  ))}
           </div>
 
           <div>
