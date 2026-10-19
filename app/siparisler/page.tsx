@@ -28,7 +28,13 @@ type Depo = {
 }
 
 const BUCKET = "siparis-yukleme"
-
+const DURUM_ADLARI: Record<string, string> = {
+  yeni: "Yeni Sipariş",
+  hazirlaniyor: "Hazırlanıyor",
+  sevke_hazir: "Sevke Hazır",
+  teslim_edildi: "Teslim Edildi",
+  iptal: "İptal Edildi",
+}
 export default function SiparislerPage() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
   const [urunler, setUrunler] = useState<Urun[]>([])
@@ -561,7 +567,9 @@ export default function SiparislerPage() {
               Sipariş #{siparis.siparis_no}
             </p>
             <p>Müşteri: {siparis.musteri_adi}</p>
-            <p>Durum: {siparis.durum}</p>
+            <p>
+  Durum: {DURUM_ADLARI[siparis.durum] ?? siparis.durum}
+</p>
             <p className="text-sm text-slate-500">
               {new Date(siparis.created_at).toLocaleString("tr-TR")}
             </p>
