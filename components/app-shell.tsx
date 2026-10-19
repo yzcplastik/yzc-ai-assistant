@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Boxes, Menu } from "lucide-react"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
+import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 import { MOBILE_NAV_ITEMS, NAV_ITEMS } from "@/lib/nav"
 import { useStore } from "@/lib/store"
@@ -56,6 +57,48 @@ function NavLink({ href, label, icon: Icon, badge, onClick }: { href: string; la
 export function AppShell({ children }: { children: ReactNode }) {
   const { products } = useStore()
   const [open, setOpen] = useState(false)
+  const [rol, setRol] = useState("")
+const [rolYukleniyor, setRolYukleniyor] = useState(true)
+
+useEffect(() => {
+  let aktif = true
+
+  async function rolGetir() {
+    const { data: kullanici } = await supabase.auth.getUser()
+
+    if (!aktif) return
+
+    if (kullanici.user) {
+      const { data } = await supabase
+        .from("kullanici_rolleri")
+        .select("rol")
+        .eq("user_id", kullanici.user.id)
+        .maybeSingle()
+
+      if (aktif) setRol(data?.rol ?? "")
+    }
+
+    if (aktif) setRolYukleniyor(false)
+  }
+
+  void rolGetir()
+
+  return () => {
+    aktif = false
+  }
+}, [])
+
+const menuOgeleri = NAV_ITEMS.filter(
+  (item) =>
+    !["/stok-giris", "/stok-cikis"].includes(item.href) ||
+    (rol === "yonetici" || rol === "calisan")
+)
+
+const mobilMenuOgeleri = MOBILE_NAV_ITEMS.filter(
+  (item) =>
+    !["/stok-giris", "/stok-cikis"].includes(item.href) ||
+    (rol === "yonetici" || rol === "calisan")
+)
   const criticalCount = products.filter((p) => stockStatus(p.stock, p.criticalLevel) !== "normal").length
 
   return (
@@ -64,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden w-64 shrink-0 flex-col gap-6 bg-sidebar px-4 py-6 text-sidebar-foreground lg:flex">
         <Brand />
         <nav aria-label="Ana menü" className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {menuOgeleri.map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
@@ -103,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </SheetTitle>
               </SheetHeader>
               <nav aria-label="Mobil menü" className="flex flex-col gap-1 px-2">
-                {NAV_ITEMS.map((item) => (
+                {menuOgeleri.map((item) => (
                   <NavLink
                     key={item.href}
                     href={item.href}
@@ -128,7 +171,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul className="grid grid-cols-5">
-            {MOBILE_NAV_ITEMS.map((item) => (
+            {mobilMenuOgeleri.map((item) => (
               <MobileNavItem key={item.href} {...item} badge={item.href === "/kritik-stoklar" ? criticalCount : undefined} />
             ))}
           </ul>
