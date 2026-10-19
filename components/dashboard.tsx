@@ -30,12 +30,12 @@ type Siparis = {
 }
 
 const DURUMLAR = [
-  { kod: "yeni", ad: "Yeni" },
+  { kod: "yeni", ad: "Yeni Sipariş" },
   { kod: "hazirlaniyor", ad: "Hazırlanıyor" },
   { kod: "sevke_hazir", ad: "Sevke Hazır" },
   { kod: "teslim_edildi", ad: "Teslim Edildi" },
+  { kod: "iptal", ad: "İptal Edildi" },
 ]
-
 export function Dashboard() {
   const router = useRouter()
 
