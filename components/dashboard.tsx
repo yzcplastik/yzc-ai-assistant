@@ -282,7 +282,9 @@ useEffect(() => {
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  Toplam {siparisler.length} sipariş
+                  Aktif: {siparisler.filter(
+  (s) => !["iptal", "teslim_edildi"].includes(s.durum)
+).length} | Teslim Edilen: {siparisSayisi("teslim_edildi")} | İptal Edilen: {siparisSayisi("iptal")}
                 </p>
 
                 {siparisler.length === 0 ? (
