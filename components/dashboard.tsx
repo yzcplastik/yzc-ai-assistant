@@ -38,6 +38,8 @@ const DURUMLAR = [
 export function Dashboard() {
   const { products, warehouses, movements } = useStore()
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
+  const [aktifEmail, setAktifEmail] = useState("")
+  const [aktifRol, setAktifRol] = useState("")
   const [siparisYukleniyor, setSiparisYukleniyor] = useState(true)
   const [siparisHatasi, setSiparisHatasi] = useState("")
 
@@ -67,7 +69,41 @@ export function Dashboard() {
       aktif = false
     }
   }, [])
+useEffect(() => {
+  let aktif = true
 
+  async function kullaniciGetir() {
+    const { data: kullanici } = await supabase.auth.getUser()
+
+    if (!aktif) return
+
+    const user = kullanici.user
+
+    if (!user) {
+      setAktifEmail("")
+      setAktifRol("")
+      return
+    }
+
+    setAktifEmail(user.email ?? "")
+
+    const { data: rolKaydi } = await supabase
+      .from("kullanici_rolleri")
+      .select("rol")
+      .eq("user_id", user.id)
+      .maybeSingle()
+
+    if (aktif) {
+      setAktifRol(rolKaydi?.rol ?? "Rol bulunamadı")
+    }
+  }
+
+  void kullaniciGetir()
+
+  return () => {
+    aktif = false
+  }
+}, [])
   const today = new Date().toDateString()
   const todaysMovements = movements.filter(
     (m) => new Date(m.createdAt).toDateString() === today
@@ -93,7 +129,27 @@ export function Dashboard() {
         title="Dashboard"
         description={`${formatDate(new Date().toISOString())} · Depo ve sipariş durumuna genel bakış`}
       />
+<div className="mb-6 flex justify-end">
+  <div className="rounded-xl border bg-card px-4 py-3 text-sm shadow-sm">
+    <p className="text-xs text-muted-foreground">
+      Aktif Kullanıcı
+    </p>
 
+    <p className="font-semibold">
+      {aktifEmail || "Kullanıcı yükleniyor..."}
+    </p>
+
+    <p className="text-xs text-muted-foreground">
+      {aktifRol === "yonetici"
+        ? "Yönetici"
+        : aktifRol === "calisan"
+          ? "Depo Çalışanı"
+          : aktifRol === "satis_temsilcisi"
+            ? "Satış Temsilcisi"
+            : aktifRol || "Rol yükleniyor..."}
+    </p>
+  </div>
+</div>
       {/* Hızlı işlemler */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         <Link
