@@ -42,6 +42,9 @@ const DURUM_ADLARI: Record<string, string> = {
 }
 export default function SiparislerPage() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([])
+  const [siparisKalemleri, setSiparisKalemleri] = useState<
+  SiparisKalemi[]
+>([])
   const [urunler, setUrunler] = useState<Urun[]>([])
   const [depolar, setDepolar] = useState<Depo[]>([])
   const [rol, setRol] = useState("")
