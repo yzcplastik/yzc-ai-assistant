@@ -582,6 +582,28 @@ if (kalemSonuc.error) {
               Sipariş #{siparis.siparis_no}
             </p>
             <p>Müşteri: {siparis.musteri_adi}</p>
+            {siparisKalemleri
+  .filter((kalem) => kalem.siparis_id === siparis.id)
+  .map((kalem) => {
+    const urun = urunler.find(
+      (u) => u.id === kalem.urun_id
+    )
+
+    return (
+      <div
+        key={kalem.id}
+        className="mt-2 rounded-lg bg-slate-100 p-3"
+      >
+        <p className="font-semibold">
+          Ürün: {urun?.ad ?? "Ürün bulunamadı"}
+        </p>
+
+        <p>
+          Miktar: {kalem.miktar} {urun?.birim ?? "Adet"}
+        </p>
+      </div>
+    )
+  })}
 
 {siparis.musteri_telefon && (
   <p>Telefon: {siparis.musteri_telefon}</p>
