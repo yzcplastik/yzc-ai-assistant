@@ -5,6 +5,7 @@ import {
   ArrowUpFromLine,
   BarChart3,
   ClipboardList,
+  Users,
   History,
   PackageSearch,
   LayoutDashboard,
