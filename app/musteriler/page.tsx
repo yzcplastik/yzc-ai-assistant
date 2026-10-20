@@ -219,6 +219,58 @@ if (siparisSonuc.error) {
     : "Sipariş Geçmişi"}
 </button>
 
+{gecmisAcikId === musteri.id && (
+  <div className="space-y-3 rounded-lg bg-slate-50 p-3">
+    {siparisler.filter(
+      (siparis) =>
+        siparis.musteri_adi.toLocaleLowerCase("tr-TR") ===
+        musteri.musteri_adi.toLocaleLowerCase("tr-TR")
+    ).length === 0 ? (
+      <p>Bu müşteriye ait sipariş bulunamadı.</p>
+    ) : (
+      siparisler
+        .filter(
+          (siparis) =>
+            siparis.musteri_adi.toLocaleLowerCase("tr-TR") ===
+            musteri.musteri_adi.toLocaleLowerCase("tr-TR")
+        )
+        .map((siparis) => (
+          <div
+            key={siparis.id}
+            className="space-y-1 rounded-lg border bg-white p-3"
+          >
+            <p className="font-semibold">
+              Sipariş No: {siparis.siparis_no}
+            </p>
+
+            <p>
+              Tarih:{" "}
+              {new Date(siparis.created_at).toLocaleDateString("tr-TR")}
+            </p>
+
+            <p>
+              Durum:{" "}
+              {({
+                yeni: "Yeni Sipariş",
+                hazirlaniyor: "Hazırlanıyor",
+                sevke_hazir: "Sevke Hazır",
+                teslim_edildi: "Teslim Edildi",
+                iptal: "İptal Edildi",
+              } as Record<string, string>)[siparis.durum] ?? siparis.durum}
+            </p>
+
+            {siparis.siparis_kalemleri.map((kalem, index) => (
+              <p key={index}>
+                Ürün: {kalem.urunler?.ad ?? "Bilinmeyen ürün"} —{" "}
+                {kalem.miktar} {kalem.urunler?.birim ?? "adet"}
+              </p>
+            ))}
+          </div>
+        ))
+    )}
+  </div>
+)}
+
 
             {duzenlenenId === musteri.id ? (
               <>
