@@ -11,8 +11,24 @@ type Musteri = {
   adres: string | null
 }
 
+type SiparisGecmisi = {
+  id: string
+  siparis_no: string
+  musteri_adi: string
+  durum: string
+  created_at: string
+  siparis_kalemleri: {
+    miktar: number
+    urunler: {
+      ad: string
+      birim: string | null
+    } | null
+  }[]
+}
+
 export default function MusterilerPage() {
   const [musteriler, setMusteriler] = useState<Musteri[]>([])
+  const [siparisler, setSiparisler] = useState<SiparisGecmisi[]>([])
   const [arama, setArama] = useState("")
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null)
   const [telefon, setTelefon] = useState("")
@@ -36,7 +52,7 @@ export default function MusterilerPage() {
       return
     }
 
-    const [musteriSonuc, rolSonuc] = await Promise.all([
+    const [musteriSonuc, rolSonuc, siparisSonuc] = await Promise.all([
       supabase
         .from("musteriler")
         .select("id, musteri_adi, telefon, adres")
@@ -45,7 +61,32 @@ export default function MusterilerPage() {
         .from("kullanici_rolleri")
         .select("rol")
         .eq("user_id", kullanici.user.id),
+      
+supabase
+  .from("siparisler")
+  .select(`
+    id,
+    siparis_no,
+    musteri_adi,
+    durum,
+    created_at,
+    siparis_kalemleri (
+      miktar,
+      urunler (
+        ad,
+        birim
+      )
+    )
+  `)
+  .order("created_at", { ascending: false }),
+
     ])
+
+if (siparisSonuc.error) {
+  setError("Sipariş geçmişi alınamadı: " + siparisSonuc.error.message)
+} else {
+  setSiparisler(siparisSonuc.data ?? [])
+}
 
     if (musteriSonuc.error) {
       setError(musteriSonuc.error.message)
