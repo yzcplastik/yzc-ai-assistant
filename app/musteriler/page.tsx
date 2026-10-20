@@ -30,6 +30,7 @@ export default function MusterilerPage() {
   const [musteriler, setMusteriler] = useState<Musteri[]>([])
   const [siparisler, setSiparisler] = useState<SiparisGecmisi[]>([])
   const [arama, setArama] = useState("")
+  const [gecmisAcikId, setGecmisAcikId] = useState<string | null>(null)
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null)
   const [telefon, setTelefon] = useState("")
   const [adres, setAdres] = useState("")
@@ -203,13 +204,21 @@ if (siparisSonuc.error) {
               {musteri.musteri_adi}
             </h2>
 
+
 <button
   type="button"
+  onClick={() =>
+    setGecmisAcikId(
+      gecmisAcikId === musteri.id ? null : musteri.id
+    )
+  }
   className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800"
-  disabled
 >
-  Sipariş Geçmişi
+  {gecmisAcikId === musteri.id
+    ? "Sipariş Geçmişini Kapat"
+    : "Sipariş Geçmişi"}
 </button>
+
 
             {duzenlenenId === musteri.id ? (
               <>
