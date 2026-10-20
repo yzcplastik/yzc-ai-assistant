@@ -162,6 +162,14 @@ export default function MusterilerPage() {
               {musteri.musteri_adi}
             </h2>
 
+<button
+  type="button"
+  className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800"
+  disabled
+>
+  Sipariş Geçmişi
+</button>
+
             {duzenlenenId === musteri.id ? (
               <>
                 <label className="block text-sm font-medium">
