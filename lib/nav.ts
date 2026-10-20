@@ -23,6 +23,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", shortLabel: "Panel", icon: LayoutDashboard },
   { href: "/siparisler", label: "Siparişler", shortLabel: "Sipariş", icon: ClipboardList },
+  { href: "/musteriler", label: "Müşteriler", shortLabel: "Müşteri", icon: Users },
   { href: "/stok-giris", label: "Stok Girişi", shortLabel: "Giriş", icon: ArrowDownToLine },
   { href: "/stok-cikis", label: "Stok Çıkışı", shortLabel: "Çıkış", icon: ArrowUpFromLine },
   { href: "/depolar", label: "Depolar", shortLabel: "Depolar", icon: Warehouse },
